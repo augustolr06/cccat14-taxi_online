@@ -1,0 +1,14 @@
+# ignorar pasta do VSCode, node_modules e arquivos de configuração
+.vscode
+backend/ride/node_modules
+backend/ride/.env
+backend/ride/.env.example
+
+# ignorar arquivos de log
+./logs/*.log
+
+# ignorar arquivos de build
+./build
+
+# ignorar arquivos de documentação
+./docs
