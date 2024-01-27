@@ -1,7 +1,34 @@
 import crypto from "crypto";
 import pgp from "pg-promise";
+import express, { Request, Response } from "express";
+const app = express();
 
-export function isValidCpf(cpf: string) {
+app.use(express.json());
+
+app.post("/signup", async (request: Request, response: Response) => {
+  try {
+    const input = request.body;
+    const output = await signup(input);
+    response.json(output);
+  } catch (e: any) {
+    response.status(422).json({
+      message: e.message,
+    });
+  }
+});
+
+app.get(
+  "/accounts/:accountId",
+  async (request: Request, response: Response) => {
+    const { accountId } = request.params;
+    const output = await getAccount(accountId);
+    response.json(output);
+  }
+);
+
+app.listen(3000);
+
+function isValidCpf(cpf: string) {
   if (!cpf) return false;
   cpf = cleanCpf(cpf);
   if (isInvalidCpfLength(cpf)) return false;
@@ -36,7 +63,7 @@ function extractCpfCheckDigit(cpf: string) {
   return cpf.slice(9);
 }
 
-export async function signup(input: any): Promise<any> {
+async function signup(input: any): Promise<any> {
   const connection = pgp()(
     "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
   );
@@ -84,7 +111,7 @@ function isValidCarPlate(carPlate: string) {
   return carPlate.match(/[A-Z]{3}[0-9]{4}/);
 }
 
-export async function getAccount(accountId: string) {
+async function getAccount(accountId: string) {
   const connection = pgp()(
     "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
   );
