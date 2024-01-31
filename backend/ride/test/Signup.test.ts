@@ -1,6 +1,8 @@
 import AccountDAO from "../src/AccountDAO";
+import AccountDAODatabase from "../src/AccountDAODatabase";
 import { GetAccount } from "../src/GetAccount";
 import { Logger } from "../src/Logger";
+import { LoggerConsole } from "../src/LoggerConsole";
 import { Signup } from "../src/Signup";
 import sinon from "sinon";
 
@@ -8,8 +10,10 @@ let signup: Signup;
 let getAccount: GetAccount;
 
 beforeEach(() => {
-  signup = new Signup();
-  getAccount = new GetAccount();
+  const accountDAO = new AccountDAODatabase();
+  const logger = new LoggerConsole();
+  signup = new Signup(accountDAO, logger);
+  getAccount = new GetAccount(accountDAO);
 });
 
 test("Deve criar uma conta para o passageiro", async function () {
@@ -140,13 +144,13 @@ test("Deve criar uma conta para o passageiro com Stub", async function () {
     password: "123456",
   };
   const stubAccountDAOSave = sinon
-    .stub(AccountDAO.prototype, "save")
+    .stub(AccountDAODatabase.prototype, "save")
     .resolves();
   const stubAccountDAOGetByEmail = sinon
-    .stub(AccountDAO.prototype, "getByEmail")
+    .stub(AccountDAODatabase.prototype, "getByEmail")
     .resolves(null);
   const stubAccountDAOGetById = sinon
-    .stub(AccountDAO.prototype, "getById")
+    .stub(AccountDAODatabase.prototype, "getById")
     .resolves(inputSignup);
   const outputSignup = await signup.execute(inputSignup);
   expect(outputSignup.accountId).toBeDefined();
@@ -160,7 +164,7 @@ test("Deve criar uma conta para o passageiro com Stub", async function () {
 
 // No Spy você espiona um determinado método e ele vai armazenar os resultados, para que depois você possa verificar esses resultados com o expect.
 test("Deve criar uma conta para o motorista com spy", async function () {
-  const spyLoggerLog = sinon.spy(Logger.prototype, "log");
+  const spyLoggerLog = sinon.spy(LoggerConsole.prototype, "log");
   // given
   const inputSignup = {
     name: "John Doe",
@@ -187,7 +191,7 @@ test("Deve criar uma conta para o motorista com spy", async function () {
 
 // O Mock é como se fosse uma junção de Stub e Spy. Nele você programa nele exatamente o que você quer que ele faça. O teste vai quebrar quando o Mock for verificado e o que você programou não acontecer.
 test("Deve criar uma conta para o passageiro com Mock", async function () {
-  const mockLogger = sinon.mock(Logger.prototype);
+  const mockLogger = sinon.mock(LoggerConsole.prototype);
   mockLogger
     .expects("log")
     .withArgs("Signup foi executado pelo usuário John Doe")
@@ -206,4 +210,41 @@ test("Deve criar uma conta para o passageiro com Mock", async function () {
   expect(outputGetAccount.email).toBe(inputSignup.email);
   mockLogger.verify();
   mockLogger.restore();
+});
+
+// O fake permite que criemos uma dependência falsa para ser passada como parâmetro para alguma outra classe que queremos testar. Nesse caso criamos um accountDAO e um Logger falsos (fakes) e passamos para signup e getAccount, que são as classes que queremos testar.
+// Ao criar um fake, ele pode ter o comportamento que quisermos, como:
+// - Fazer um getById retornar exatamente os dados do input que passamos para o Signup;
+// - Fazer um getById retornar outra coisa e ver se a aplicação lança o erro corretamente
+// - Fazer o getByEmail retornar dados de uma conta simulando um usuário já existente encontrado no banco, para que assim possamos testar se a aplicação acusa um "duplicated account";
+test("Deve criar uma conta para o passageiro com Fake", async function () {
+  const inputSignup = {
+    name: "John Doe",
+    email: `john.doe${Math.random()}@gmail.com`,
+    cpf: "97456321558",
+    isPassenger: true,
+    password: "123456",
+  };
+  const accounts: any[] = [];
+  const accountDAOFake: AccountDAO = {
+    save: async function (account: any): Promise<void> {
+      accounts.push(account);
+    },
+    getById: async function (accountId: string): Promise<any> {
+      return accounts.find((account) => account.accountId === accountId);
+    },
+    getByEmail: async function (email: string): Promise<any> {
+      return accounts.find((account) => account.email === email);
+    },
+  };
+  const loggerFake: Logger = {
+    log: function (message: string): void {},
+  };
+  const signup = new Signup(accountDAOFake, loggerFake);
+  const outputSignup = await signup.execute(inputSignup);
+  expect(outputSignup.accountId).toBeDefined();
+  const getAccount = new GetAccount(accountDAOFake);
+  const outputGetAccount = await getAccount.execute(outputSignup.accountId);
+  expect(outputGetAccount.name).toBe(inputSignup.name);
+  expect(outputGetAccount.email).toBe(inputSignup.email);
 });

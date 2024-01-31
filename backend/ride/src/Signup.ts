@@ -4,13 +4,7 @@ import { isValidCpf } from "./CpfValidator";
 import { Logger } from "./Logger";
 
 export class Signup {
-  accountDAO: AccountDAO;
-  logger: Logger;
-
-  constructor() {
-    this.accountDAO = new AccountDAO();
-    this.logger = new Logger();
-  }
+  constructor(private accountDAO: AccountDAO, private logger: Logger) {}
   async execute(input: any) {
     this.logger.log(`Signup foi executado pelo usuário ${input.name}`);
     input.accountId = crypto.randomUUID();
