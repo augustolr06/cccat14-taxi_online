@@ -1,10 +1,10 @@
 import crypto from "crypto";
-import AccountDAO from "./AccountDAO";
 import { isValidCpf } from "./CpfValidator";
 import { Logger } from "./Logger";
+import SignupAccountDAO from "./SignupAccountDAO";
 
 export class Signup {
-  constructor(private accountDAO: AccountDAO, private logger: Logger) {}
+  constructor(private accountDAO: SignupAccountDAO, private logger: Logger) {}
   async execute(input: any) {
     this.logger.log(`Signup foi executado pelo usuário ${input.name}`);
     input.accountId = crypto.randomUUID();

@@ -1,7 +1,11 @@
 import pgp from "pg-promise";
 import AccountDAO from "./AccountDAO";
+import SignupAccountDAO from "./SignupAccountDAO";
+import GetAccountAccountDAO from "./GetAccountAccountDAO";
 
-export default class AccountDAODatabase implements AccountDAO {
+export default class AccountDAODatabase
+  implements SignupAccountDAO, GetAccountAccountDAO
+{
   async save(account: any) {
     const connection = pgp()(
       "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
