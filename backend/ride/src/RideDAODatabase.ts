@@ -18,19 +18,49 @@ export class RideDAODatabase implements RideDAO {
         ride.status,
         ride.date,
       ]
-    );
-    await connection.$pool.end();
+      );
+      await connection.$pool.end();
+    }
+  async update(ride: any): Promise<void> {
+    const connection = pgp()(
+      "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
+      );
+      await connection.query(
+        "update cccat14.ride set status = $1, driver_id = $2 where ride_id = $3",
+        [ride.status, ride.driverId, ride.ride_id]
+      );
+      await connection.$pool.end();
   }
-
+    
   async getById(rideId: string) {
     const connection = pgp()(
       "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
-    );
-    const [ride] = await connection.query(
-      "select * from cccat14.ride where ride_id = $1",
-      [rideId]
-    );
-    await connection.$pool.end();
-    return ride;
-  }
+      );
+      const [ride] = await connection.query(
+        "select * from cccat14.ride where ride_id = $1",
+        [rideId]
+      );
+      await connection.$pool.end();
+      return ride;
+    }
+    
+  async list(): Promise<any[]> {
+    const connection = pgp()(
+      "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
+      );
+      const rides = await connection.query("select * from cccat14.ride", []);
+      await connection.$pool.end();
+      return rides;
+    }
+  async getActiveRideByPassengerId(passengerId: string): Promise<any> {
+    const connection = pgp()(
+      "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
+      );
+      const [ride] = await connection.query(
+        "select * from cccat14.ride where passenger_id = $1 and status in ('requested', 'accepted', 'in_progress')",
+        [passengerId]
+        );
+        await connection.$pool.end();
+        return ride;
+    }
 }

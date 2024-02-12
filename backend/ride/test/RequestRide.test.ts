@@ -18,11 +18,11 @@ beforeEach(() => {
   const logger = new LoggerConsole();
   const rideDAO = new RideDAODatabase();
   signup = new Signup(accountDAO, logger);
-  requestRide = new RequestRide(rideDAO, logger);
+  requestRide = new RequestRide(rideDAO, accountDAO, logger);
   getRide = new GetRide(rideDAO, logger);
 });
 
-test("Deve solicitar uma corrida", async function () {
+test("Deve poder solicitar uma corrida", async function () {
   // given
   const inputSignup = {
     name: "John Doe",
@@ -48,4 +48,53 @@ test("Deve solicitar uma corrida", async function () {
   expect(outputGetRide.passenger_id).toBe(inputRequestRide.passengerId);
   expect(outputGetRide.status).toBe("requested");
   expect(outputGetRide.date).toBeDefined();
+});
+
+test("Não deve poder solicitar uma corrida se a conta não for de um passageiro", async function () {
+  // given
+  const inputSignup = {
+    name: "John Doe",
+    email: `john.doe${Math.random()}@gmail.com`,
+    cpf: "97456321558",
+    password: "123456",
+    isPassenger: false,
+    isDriver: true,
+    carPlate: "ABC1234",
+  };
+  // when
+  const outputSignup = await signup.execute(inputSignup);
+  const inputRequestRide = {
+    passengerId: outputSignup.accountId,
+    fromLat: -27.584905257808835,
+    fromLong: -48.54502219532124,
+    toLat: -27.496887588317275,
+    toLong: -48.522234807851476,
+  };
+  
+  // then
+  await expect(() => requestRide.execute(inputRequestRide)).rejects.toThrow(new Error("Only passengers can request a ride"));
+});
+
+test("Não deve poder solicitar uma corrida se o passageiro já tiver oura corrida ativa", async function () {
+  // given
+  const inputSignup = {
+    name: "John Doe",
+    email: `john.doe${Math.random()}@gmail.com`,
+    cpf: "97456321558",
+    password: "123456",
+    isPassenger: true,
+  };
+  // when
+  const outputSignup = await signup.execute(inputSignup);
+  const inputRequestRide = {
+    passengerId: outputSignup.accountId,
+    fromLat: -27.584905257808835,
+    fromLong: -48.54502219532124,
+    toLat: -27.496887588317275,
+    toLong: -48.522234807851476,
+  };
+  
+  // then
+  await requestRide.execute(inputRequestRide);
+  await expect(() => requestRide.execute(inputRequestRide)).rejects.toThrow(new Error("Passenger already has an active ride"));
 });

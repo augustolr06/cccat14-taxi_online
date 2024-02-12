@@ -6,7 +6,7 @@ import SignupAccountDAO from "./SignupAccountDAO";
 export class Signup {
   constructor(private accountDAO: SignupAccountDAO, private logger: Logger) {}
   async execute(input: any) {
-    this.logger.log(`Signup foi executado pelo usuário ${input.name}`);
+    // this.logger.log(`Signup foi executado pelo usuário ${input.name}`);
     input.accountId = crypto.randomUUID();
     const account = await this.accountDAO.getByEmail(input.email);
     if (account) throw new Error("Duplicated account");
