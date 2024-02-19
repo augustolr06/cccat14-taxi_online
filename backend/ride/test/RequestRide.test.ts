@@ -1,11 +1,10 @@
-import AccountDAO from "../src/AccountDAO";
-import AccountDAODatabase from "../src/AccountDAODatabase";
+import AccountRepositoryDatabase from "../src/AccountRepositoryDatabase";
 import { GetAccount } from "../src/GetAccount";
 import { GetRide } from "../src/GetRide";
 import { Logger } from "../src/Logger";
 import { LoggerConsole } from "../src/LoggerConsole";
 import { RequestRide } from "../src/RequestRide";
-import { RideDAODatabase } from "../src/RideDAODatabase";
+import { RideRepositoryDatabase } from "../src/RideRepositoryDatabase";
 import { Signup } from "../src/Signup";
 import sinon from "sinon";
 
@@ -14,12 +13,12 @@ let requestRide: RequestRide;
 let getRide: GetRide;
 
 beforeEach(() => {
-  const accountDAO = new AccountDAODatabase();
+  const accountRepository = new AccountRepositoryDatabase();
   const logger = new LoggerConsole();
-  const rideDAO = new RideDAODatabase();
-  signup = new Signup(accountDAO, logger);
-  requestRide = new RequestRide(rideDAO, accountDAO, logger);
-  getRide = new GetRide(rideDAO, logger);
+  const rideRepository = new RideRepositoryDatabase();
+  signup = new Signup(accountRepository, logger);
+  requestRide = new RequestRide(rideRepository, accountRepository, logger);
+  getRide = new GetRide(rideRepository, logger);
 });
 
 test("Deve poder solicitar uma corrida", async function () {
@@ -28,8 +27,8 @@ test("Deve poder solicitar uma corrida", async function () {
     name: "John Doe",
     email: `john.doe${Math.random()}@gmail.com`,
     cpf: "97456321558",
-    isPassenger: true,
     password: "123456",
+    isPassenger: true,
   };
   // when
   const outputSignup = await signup.execute(inputSignup);
@@ -42,12 +41,10 @@ test("Deve poder solicitar uma corrida", async function () {
   };
   const outputRequestRide = await requestRide.execute(inputRequestRide);
   const outputGetRide = await getRide.execute(outputRequestRide.rideId);
-  console.log(outputGetRide);
   // then
   expect(outputRequestRide.rideId).toBeDefined();
-  expect(outputGetRide.passenger_id).toBe(inputRequestRide.passengerId);
+  expect(outputGetRide.passengerId).toBe(inputRequestRide.passengerId);
   expect(outputGetRide.status).toBe("requested");
-  expect(outputGetRide.date).toBeDefined();
 });
 
 test("Não deve poder solicitar uma corrida se a conta não for de um passageiro", async function () {

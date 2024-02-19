@@ -1,12 +1,11 @@
 import pgp from "pg-promise";
-import AccountDAO from "./AccountDAO";
-import SignupAccountDAO from "./SignupAccountDAO";
-import GetAccountAccountDAO from "./GetAccountAccountDAO";
+import AccountRepository from "./AccountRepository";
+import { Account } from "./Account";
 
-export default class AccountDAODatabase
-  implements SignupAccountDAO, GetAccountAccountDAO
+export default class AccountRepositoryDatabase
+  implements AccountRepository
 {
-  async save(account: any) {
+  async save(account: Account): Promise<void> {
     const connection = pgp()(
       "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
     );
@@ -25,7 +24,7 @@ export default class AccountDAODatabase
     await connection.$pool.end();
   }
 
-  async getById(accountId: string) {
+  async getById(accountId: string): Promise<Account | undefined> {
     const connection = pgp()(
       "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
     );
@@ -34,10 +33,19 @@ export default class AccountDAODatabase
       [accountId]
     );
     await connection.$pool.end();
-    return account;
+    if (!account) return undefined;
+    return Account.restore(
+      account.account_id,
+      account.name,
+      account.email,
+      account.cpf,
+      account.car_plate,
+      account.is_driver,
+      account.is_passenger,
+    );
   }
 
-  async getByEmail(email: string) {
+  async getByEmail(email: string): Promise<Account | undefined> {
     const connection = pgp()(
       "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
     );
@@ -46,6 +54,14 @@ export default class AccountDAODatabase
       [email]
     );
     await connection.$pool.end();
-    return account;
+    return account ? Account.restore(
+      account.account_id,
+      account.name,
+      account.email,
+      account.cpf,
+      account.car_plate,
+      account.is_driver,
+      account.is_passenger
+    ) : undefined;
   }
 }

@@ -6,7 +6,9 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "dev": "ts-node-dev --respawn src/index.ts",
-    "test": "ts-jest"
+    "dev:api": "nodemon --exec ts-node src/api.ts",
+    "test": "ts-jest",
+    "test:jest": "jest"
   },
   "dependencies": {
     "@types/express": "^4.17.17",

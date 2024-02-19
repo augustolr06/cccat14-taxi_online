@@ -11,7 +11,6 @@ test("Deve criar uma conta para o passageiro pela API", async () => {
     email: `john.doe${Math.random()}@gmail.com`,
     cpf: "97456321558",
     isPassenger: true,
-    password: "123456",
   };
   // when
   const responseSignup = await axios.post(
@@ -29,7 +28,7 @@ test("Deve criar uma conta para o passageiro pela API", async () => {
   expect(outputGetAccount.name).toBe(inputSignup.name);
   expect(outputGetAccount.email).toBe(inputSignup.email);
   expect(outputGetAccount.cpf).toBe(inputSignup.cpf);
-  expect(outputGetAccount.is_passenger).toBe(inputSignup.isPassenger);
+  expect(outputGetAccount.isPassenger).toBe(inputSignup.isPassenger);
 });
 
 test("Não deve criar conta pela API se o nome for inválido", async () => {
@@ -39,7 +38,6 @@ test("Não deve criar conta pela API se o nome for inválido", async () => {
     email: `john.doe${Math.random()}@gmail.com`,
     cpf: "97456321558",
     isPassenger: true,
-    password: "123456",
   };
   // when
   const responseSignup = await axios.post(
@@ -61,7 +59,6 @@ test("Deve criar uma conta para o motorista", async () => {
     isPassenger: false,
     isDriver: true,
     carPlate: "ABC1234",
-    password: "654321",
   };
   // when
   const responseSignup = await axios.post(
@@ -80,9 +77,9 @@ test("Deve criar uma conta para o motorista", async () => {
   expect(outputGetAccount.name).toBe(inputSignup.name);
   expect(outputGetAccount.email).toBe(inputSignup.email);
   expect(outputGetAccount.cpf).toBe(inputSignup.cpf);
-  expect(outputGetAccount.is_passenger).toBe(inputSignup.isPassenger);
-  expect(outputGetAccount.is_driver).toBe(inputSignup.isDriver);
-  expect(outputGetAccount.car_plate).toBe(inputSignup.carPlate);
+  expect(outputGetAccount.isPassenger).toBe(inputSignup.isPassenger);
+  expect(outputGetAccount.isDriver).toBe(inputSignup.isDriver);
+  expect(outputGetAccount.carPlate).toBe(inputSignup.carPlate);
 });
 
 test("Não deve criar conta para o motorista se a placa do carro for inválida", async () => {
@@ -94,7 +91,6 @@ test("Não deve criar conta para o motorista se a placa do carro for inválida",
     isPassenger: false,
     isDriver: true,
     carPlate: "abc1234", // placa não atende à verificação da regex
-    password: "654321",
   };
   // when
   await axios.post("http://localhost:3000/signup", inputSignup);

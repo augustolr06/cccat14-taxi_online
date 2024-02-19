@@ -1,14 +1,12 @@
 import { AcceptRide } from "../src/AcceptRide";
-import AccountDAO from "../src/AccountDAO";
-import AccountDAODatabase from "../src/AccountDAODatabase";
+import AccountRepositoryDatabase from "../src/AccountRepositoryDatabase";
 import { GetAccount } from "../src/GetAccount";
 import { GetRide } from "../src/GetRide";
 import { Logger } from "../src/Logger";
 import { LoggerConsole } from "../src/LoggerConsole";
 import { RequestRide } from "../src/RequestRide";
-import { RideDAODatabase } from "../src/RideDAODatabase";
+import { RideRepositoryDatabase } from "../src/RideRepositoryDatabase";
 import { Signup } from "../src/Signup";
-import sinon from "sinon";
 
 let signup: Signup;
 let requestRide: RequestRide;
@@ -16,13 +14,13 @@ let getRide: GetRide;
 let acceptRide: AcceptRide;
 
 beforeEach(() => {
-  const accountDAO = new AccountDAODatabase();
+  const accountRepository = new AccountRepositoryDatabase();
   const logger = new LoggerConsole();
-  const rideDAO = new RideDAODatabase();
-  signup = new Signup(accountDAO, logger);
-  requestRide = new RequestRide(rideDAO, accountDAO, logger);
-  getRide = new GetRide(rideDAO, logger);
-  acceptRide = new AcceptRide(rideDAO, accountDAO);
+  const rideRepository = new RideRepositoryDatabase();
+  signup = new Signup(accountRepository, logger);
+  requestRide = new RequestRide(rideRepository, accountRepository, logger);
+  getRide = new GetRide(rideRepository, logger);
+  acceptRide = new AcceptRide(rideRepository, accountRepository);
 });
 
 test("Deve poder aceitar uma corrida", async function () {
@@ -31,8 +29,8 @@ test("Deve poder aceitar uma corrida", async function () {
     name: "John Doe",
     email: `john.doe${Math.random()}@gmail.com`,
     cpf: "97456321558",
-    isPassenger: true,
     password: "123456",
+    isPassenger: true,
   };
   const outputSignupPassenger = await signup.execute(inputSignupPassenger);
   const inputRequestRide = {
@@ -61,17 +59,19 @@ test("Deve poder aceitar uma corrida", async function () {
     await acceptRide.execute(inputAcceptRide);
     const outputGetRide = await getRide.execute(outputRequestRide.rideId);
     expect(outputGetRide.status).toBe("accepted");
-    expect(outputGetRide.driver_id).toBe(outputSignupDriver.accountId);
+    expect(outputGetRide.driverId).toBe(outputSignupDriver.accountId);
 });
 
 test("Não deve poder aceitar uma corrida se a conta não for de um motorista", async function () {
   // Passenger:
   const inputSignupPassenger = {
-    name: "John Doe",
+    name: "John Passenger",
     email: `john.doe${Math.random()}@gmail.com`,
     cpf: "97456321558",
-    isPassenger: true,
     password: "123456",
+    carPlate: "PAS1234",
+    isDriver: false,
+    isPassenger: true,
   };
   const outputSignupPassenger = await signup.execute(inputSignupPassenger);
   const inputRequestRide = {
@@ -84,13 +84,13 @@ test("Não deve poder aceitar uma corrida se a conta não for de um motorista", 
   const outputRequestRide = await requestRide.execute(inputRequestRide);
     // Driver:
     const inputSignupDriver = {
-      name: "John Doe",
-      email: `john.doe${Math.random()}@gmail.com`,
+      name: "John Driver",
+      email: `john.driver${Math.random()}@gmail.com`,
       cpf: "97456321558",
       password: "123456",
-      isPassenger: false,
+      carPlate: "DRIVER1234",
       isDriver: false,
-      carPlate: "ABC1234",
+      isPassenger: true,
     };
     const outputSignupDriver = await signup.execute(inputSignupDriver);
     const inputAcceptRide = {

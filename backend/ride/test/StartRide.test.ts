@@ -1,15 +1,14 @@
 import { AcceptRide } from "../src/AcceptRide";
-import AccountDAO from "../src/AccountDAO";
-import AccountDAODatabase from "../src/AccountDAODatabase";
 import { GetAccount } from "../src/GetAccount";
 import { GetRide } from "../src/GetRide";
 import { Logger } from "../src/Logger";
 import { LoggerConsole } from "../src/LoggerConsole";
 import { RequestRide } from "../src/RequestRide";
-import { RideDAODatabase } from "../src/RideDAODatabase";
+import { RideRepositoryDatabase } from "../src/RideRepositoryDatabase";
 import { Signup } from "../src/Signup";
 import sinon from "sinon";
 import { StartRide } from "../src/StartRide";
+import AccountRepositoryDatabase from "../src/AccountRepositoryDatabase";
 
 let signup: Signup;
 let requestRide: RequestRide;
@@ -18,14 +17,14 @@ let acceptRide: AcceptRide;
 let startRide: StartRide;
 
 beforeEach(() => {
-  const accountDAO = new AccountDAODatabase();
+  const accountRepository = new AccountRepositoryDatabase();
   const logger = new LoggerConsole();
-  const rideDAO = new RideDAODatabase();
-  signup = new Signup(accountDAO, logger);
-  requestRide = new RequestRide(rideDAO, accountDAO, logger);
-  getRide = new GetRide(rideDAO, logger);
-  acceptRide = new AcceptRide(rideDAO, accountDAO);
-  startRide = new StartRide(rideDAO);
+  const rideRepository = new RideRepositoryDatabase();
+  signup = new Signup(accountRepository, logger);
+  requestRide = new RequestRide(rideRepository, accountRepository, logger);
+  getRide = new GetRide(rideRepository, logger);
+  acceptRide = new AcceptRide(rideRepository, accountRepository);
+  startRide = new StartRide(rideRepository);
 });
 
 test("Deve poder iniciar uma corrida", async function () {
@@ -34,8 +33,8 @@ test("Deve poder iniciar uma corrida", async function () {
     name: "John Doe",
     email: `john.doe${Math.random()}@gmail.com`,
     cpf: "97456321558",
-    isPassenger: true,
     password: "123456",
+    isPassenger: true,
   };
   const outputSignupPassenger = await signup.execute(inputSignupPassenger);
   const inputRequestRide = {
@@ -77,7 +76,6 @@ test("Deve poder iniciar uma corrida", async function () {
 //     email: `john.doe${Math.random()}@gmail.com`,
 //     cpf: "97456321558",
 //     isPassenger: true,
-//     password: "123456",
 //   };
 //   const outputSignupPassenger = await signup.execute(inputSignupPassenger);
 //   const inputRequestRide = {
@@ -93,7 +91,6 @@ test("Deve poder iniciar uma corrida", async function () {
 //       name: "John Doe",
 //       email: `john.doe${Math.random()}@gmail.com`,
 //       cpf: "97456321558",
-//       password: "123456",
 //       isPassenger: false,
 //       isDriver: false,
 //       carPlate: "ABC1234",

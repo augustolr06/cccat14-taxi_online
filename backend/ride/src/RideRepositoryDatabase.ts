@@ -1,8 +1,9 @@
 import pgp from "pg-promise";
-import { RideDAO } from "./RideDAO";
+import { RideRepository } from "./RideRepository";
+import { Ride } from "./Ride";
 
-export class RideDAODatabase implements RideDAO {
-  async save(ride: any) {
+export class RideRepositoryDatabase implements RideRepository {
+  async save(ride: Ride) {
     const connection = pgp()(
       "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
     );
@@ -15,24 +16,24 @@ export class RideDAODatabase implements RideDAO {
         ride.fromLong,
         ride.toLat,
         ride.toLong,
-        ride.status,
+        ride.getStatus(),
         ride.date,
       ]
       );
       await connection.$pool.end();
     }
-  async update(ride: any): Promise<void> {
+  async update(ride: Ride): Promise<void> {
     const connection = pgp()(
       "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
       );
       await connection.query(
         "update cccat14.ride set status = $1, driver_id = $2 where ride_id = $3",
-        [ride.status, ride.driverId, ride.ride_id]
+        [ride.getStatus(), ride.getDriverId(), ride.rideId]
       );
       await connection.$pool.end();
   }
     
-  async getById(rideId: string) {
+  async getById(rideId: string): Promise<Ride | undefined> {
     const connection = pgp()(
       "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
       );
@@ -41,18 +42,43 @@ export class RideDAODatabase implements RideDAO {
         [rideId]
       );
       await connection.$pool.end();
-      return ride;
+      if (!ride) return undefined;
+      return new Ride(
+        ride.ride_id,
+        ride.passenger_id,
+        ride.driver_id,
+        ride.status,
+        ride.date,
+        parseFloat(ride.from_lat),
+        parseFloat(ride.from_long),
+        parseFloat(ride.to_lat),
+        parseFloat(ride.to_long)
+      );
     }
     
-  async list(): Promise<any[]> {
+  async list(): Promise<Ride[]> {
     const connection = pgp()(
       "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
       );
-      const rides = await connection.query("select * from cccat14.ride", []);
+      const ridesData = await connection.query("select * from cccat14.ride", []);
       await connection.$pool.end();
-      return rides;
+      const rides = ridesData.map(
+        (ride: any) =>
+          new Ride(
+            ride.ride_id,
+            ride.passenger_id,
+            ride.driver_id,
+            ride.status,
+            ride.date,
+            parseFloat(ride.from_lat),
+            parseFloat(ride.from_long),
+            parseFloat(ride.to_lat),
+            parseFloat(ride.to_long)
+          )
+        );
+      return rides
     }
-  async getActiveRideByPassengerId(passengerId: string): Promise<any> {
+  async getActiveRideByPassengerId(passengerId: string): Promise<Ride | undefined> {
     const connection = pgp()(
       "postgres://postgres:postgres@localhost:5432/cccat14-taxi_online"
       );
@@ -61,6 +87,7 @@ export class RideDAODatabase implements RideDAO {
         [passengerId]
         );
         await connection.$pool.end();
+        if (!ride) return undefined;
         return ride;
     }
 }

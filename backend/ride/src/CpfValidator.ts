@@ -1,4 +1,4 @@
-export function isValidCpf(cpf: string) {
+export function validateCpf(cpf: string) {
   if (!cpf) return false;
   cpf = cleanCpf(cpf);
   if (isInvalidCpfLength(cpf)) return false;
